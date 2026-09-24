@@ -1,24 +1,11 @@
 import express from "express";
 import type { Router } from "express";
-import AuthenticationController from "./auth.controller.js";
-import { restrictToAuthenticatedUser } from "../middleware/auth.middleware.js";
+import { AuthController } from "./auth.controller.js";
+import { validate } from "../middleware/validate.middleware.js";
+import { registerSchema } from "../dto/register-dto.js";
+import { loginSchema } from "../dto/login-dto.js";
 
 export const authRouter: Router = express.Router();
 
-const authenticationController = new AuthenticationController();
-
-authRouter.post(
-  "/sign-up",
-  authenticationController.handleSignup.bind(authenticationController),
-);
-
-authRouter.post(
-  "/sign-in",
-  authenticationController.handleSignin.bind(authenticationController),
-);
-
-authRouter.get(
-  "/me",
-  restrictToAuthenticatedUser(),
-  authenticationController.handleProfile.bind(authenticationController),
-);
+authRouter.post("/sign-up", validate(registerSchema), AuthController.register);
+authRouter.post("/login", validate(loginSchema), AuthController.login);
