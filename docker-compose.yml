@@ -1,16 +1,16 @@
 services:
   postgresdb:
-    image: postgres:17 # blueprint (like a class) — a container is a running instance of this
+    image: postgres:17
     container_name: auth_with_ts_postgres
     restart: unless-stopped
     ports:
-      - "5432:5432" # host:container — lets your Node app (running outside Docker) reach Postgres inside the container
+      - "5432:5432"
     environment:
-      POSTGRES_USER: postgres # username
-      POSTGRES_PASSWORD: postgres # password
-      POSTGRES_DB: auth_with_TS # db_name, created automatically on first startup
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: auth_with_TS
     volumes:
-      - postgres_data:/var/lib/postgresql/data # persist DB data outside the container, so it survives container restarts/removal
+      - postgres_data:/var/lib/postgresql/data
 
 volumes:
-  postgres_data: # named volume, managed by Docker (not a plain folder you'll see directly in your project)
+  postgres_data:

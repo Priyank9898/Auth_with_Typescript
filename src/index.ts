@@ -1,17 +1,12 @@
-import { createServer } from "node:http";
-import { createExpressApplication } from "./app/app.index.js";
+import "dotenv/config";
+import app from "./app/app.index.js";
+import { requireEnv } from "./app/utils/require-env.js";
 
-const main = async () => {
-  try {
-    const server = createServer(createExpressApplication());
-    const port: number = 8080;
-    server.listen(port, () => {
-      console.log(`Server is running on ${port} port`);
-    });
-  } catch (err) {
-    console.error(err);
-    throw err;
-  }
+const startPoint = () => {
+  const port = requireEnv("PORT");
+  app.listen(port, () => {
+    console.log(`Server is running on ${port}`);
+  });
 };
 
-main();
+startPoint();

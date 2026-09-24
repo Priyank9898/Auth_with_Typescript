@@ -1,26 +1,19 @@
 import express from "express";
 import type { Express } from "express";
+import cookieParser from "cookie-parser";
+import { errorMiddleware } from "./middleware/error.middleware.js";
+import { authRouter } from "./auth/auth.routes.js";
+const app: Express = express();
 
-import { authRouter } from "./auth/auth.route.js";
-import { authenticationMiddleware } from "./middleware/auth.middleware.js";
+// Middleware
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser());
 
-// This function must return something that matches the shape of an express object
-export function createExpressApplication(): Express {
-  const app = express();
+//Route
+app.use("/auth-ts", authRouter);
 
-  //Middleware
-  app.use(express.json());
-  app.use(authenticationMiddleware());
+//! Error Middleware
+app.use(errorMiddleware);
 
-  //Routes
-  app.get("/", (req, res) => {
-    return res.json({
-      msg: "Testing route",
-    });
-  });
-
-  // app --- any request comes form "/auth" use authRouter
-  app.use("/auth", authRouter);
-
-  return app;
-}
+export default app;
