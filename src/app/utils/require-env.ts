@@ -1,7 +1,9 @@
-export function requireEnv(name: string): string {
-  const constant = process.env[name];
-  if (!constant) {
-    throw new Error(`Missing required environment:${constant}`);
-  }
-  return constant;
-}
+// import { ApiError } from "./api-error-response.js";
+import { ApiError } from "./api-error-response.js";
+
+export const requireEnv = function (input: string) {
+  const environmentVariable = process.env[input];
+  if (!environmentVariable)
+    throw ApiError.unauthorized(`${environmentVariable} not present`);
+  return environmentVariable;
+};

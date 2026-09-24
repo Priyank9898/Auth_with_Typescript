@@ -4,7 +4,7 @@ import { db } from "../../db/db.index.js";
 import { userTable } from "../../db/db.schema.js";
 import { eq } from "drizzle-orm";
 import { randomBytes, createHmac } from "node:crypto";
-import { ApiError } from "../utils/api-error.js";
+import { ApiError } from "../utils/api-error-response.js";
 import { ApiResponse } from "../utils/api-response.js";
 import {
   generateAccessToken,

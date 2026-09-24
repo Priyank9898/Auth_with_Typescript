@@ -1,7 +1,7 @@
 import type { Request, Response, NextFunction } from "express";
-import { ApiError } from "../utils/api-error.js";
+import { ApiError } from "../utils/api-error-response.js";
 import { verifyAccessToken } from "../utils/jwt-utils.js";
-import { handleJWTerror } from "../utils/jwt-error-handling.js";
+import { handleJWTerror } from "../utils/jwt-utils-error.js";
 import type { JwtPayload } from "jsonwebtoken";
 
 export function authenticationMiddleware() {
