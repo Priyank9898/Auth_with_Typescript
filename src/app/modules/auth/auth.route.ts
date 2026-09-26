@@ -9,3 +9,6 @@ export const authRouter: Router = express.Router();
 
 authRouter.post("/sign-up", validate(registerSchema), AuthController.register);
 authRouter.post("/login", validate(loginSchema), AuthController.login);
+
+authRouter.get("/verify-email/:token", AuthController.emailVerification);
+authRouter.post("/refresh", AuthController.refresh);

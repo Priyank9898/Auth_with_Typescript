@@ -7,6 +7,7 @@ import { createHmac, randomBytes } from "node:crypto";
 import { JwtUtils } from "../../common/utils/jwt-utils.js";
 import crypto from "crypto";
 import type { LoginPayload } from "./dto/login-dto.js";
+import { sendVerificationMail } from "../../common/services/email.service.js";
 
 const passGenerator = (password: string, existingSalt?: string) => {
   const salt = existingSalt ?? randomBytes(32).toString("hex");
@@ -36,53 +37,130 @@ export class AuthService {
     const { rawToken, hashedToken } = JwtUtils.generateResetToken();
 
     // DB insertion
-    const [user] = await db
-      .insert(userTable)
-      .values({
-        firstName,
-        lastName,
-        email,
-        password: hashedPassword,
-        salt,
-        verificationToken: hashedToken,
-      })
-      .returning({
-        id: userTable.id,
-      });
+    await db.insert(userTable).values({
+      firstName,
+      lastName,
+      email,
+      password: hashedPassword,
+      salt,
+      verificationToken: hashedToken,
+    });
 
-    if (!user) throw ApiError.internal("Failed to create user");
+    try {
+      await sendVerificationMail(email, rawToken);
+    } catch (err) {
+      console.error(`Failed to send Email for :${email}`);
+    }
 
-    return user;
-
-    // TODO: Email service
+    return;
   }
 
   static async login(data: LoginPayload) {
     const { email, password } = data;
 
-    const checkEmailExist = await db
+    const emailExist = await db
       .select()
       .from(userTable)
       .where(eq(userTable.email, email));
 
-    if (checkEmailExist.length === 0)
+    if (emailExist.length === 0)
       throw ApiError.unauthorized("Check email or password");
 
-    const user = checkEmailExist[0];
+    // Fetches user detail
+    const user = emailExist[0];
+    if (!user) throw ApiError.unauthorized("Failed to fetch data");
 
-    const userPassWordCheck = passGenerator(password, user?.salt);
+    const hashedInputPassword = passGenerator(password, user.salt);
 
-    if (userPassWordCheck.hashedPassword !== user?.password)
+    // compare password
+    if (user.password !== hashedInputPassword.hashedPassword)
       throw ApiError.unauthorized("Check email or password");
+
+    // Check for email verification
+    if (!user.emailVerified)
+      throw ApiError.unauthorized("Kindly verify your email");
 
     const accessToken = JwtUtils.generateAccessToken({
       id: user.id,
       role: user.role,
     });
 
-    const refreshToken = JwtUtils.generateRefreshToken({ id: user.id });
+    const refreshToken = JwtUtils.generateRefreshToken({
+      id: user.id,
+    });
+
     const hashedRefreshToken = hash(refreshToken);
 
+    // Updating DB
+    await db
+      .update(userTable)
+      .set({ refreshToken: hashedRefreshToken })
+      .where(eq(userTable.id, user.id));
+
+    return { accessToken, refreshToken };
+  }
+
+  static async verifyEmail(token: string) {
+    if (!token) throw ApiError.notFound("Missing token for email verification");
+
+    const hashedToken = hash(token);
+
+    const tokenDbLookUp = await db
+      .select({ id: userTable.id })
+      .from(userTable)
+      .where(eq(userTable.verificationToken, hashedToken));
+
+    if (tokenDbLookUp.length === 0)
+      throw ApiError.unauthorized("Token verification failed for VT");
+
+    const user = tokenDbLookUp[0];
+    if (!user) throw ApiError.unauthorized("User not found");
+
+    await db
+      .update(userTable)
+      .set({
+        verificationToken: null,
+        emailVerified: true,
+      })
+      .where(eq(userTable.id, user.id));
+
+    return;
+  }
+
+  static async refresh(token: string) {
+    /**
+     * once the accessToken time validity expires
+     * A request will come with REFRESH token
+     * validate refreshToken --> Can extract user ID of that TOKEN
+     * db lookup and check if any user with that ID exist
+     * if it exist then generate a new Refresh and Access Token
+     * return Access and Refresh Token
+     */
+
+    // When express token's validity runs out
+    if (!token) throw ApiError.notFound("Refresh not found");
+
+    const decode = JwtUtils.verifyRefreshToken(token); // userID
+    if (!decode) throw ApiError.unauthorized("Mismatch in ID");
+
+    const dbLookUp = await db
+      .select()
+      .from(userTable)
+      .where(eq(userTable.id, decode.id));
+
+    const user = dbLookUp[0];
+    if (!user) throw ApiError.unauthorized("User does not exist");
+
+    const newAccessToken = JwtUtils.generateAccessToken({
+      id: user.id,
+      role: user.role,
+    });
+    const newRefreshToken = JwtUtils.generateRefreshToken({
+      id: user.id,
+    });
+    const hashedRefreshToken = hash(newRefreshToken);
+
+    // Update in DB
     await db
       .update(userTable)
       .set({
@@ -90,6 +168,6 @@ export class AuthService {
       })
       .where(eq(userTable.id, user.id));
 
-    return { accessToken, refreshToken };
+    return { newAccessToken, newRefreshToken };
   }
 }
