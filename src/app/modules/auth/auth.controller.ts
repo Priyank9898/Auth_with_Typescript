@@ -1,6 +1,6 @@
-import type { LoginPayload } from "../dto/login-dto.js";
-import type { RegisterPayload } from "../dto/register-dto.js";
-import { ApiResponse } from "../utils/api-response.js";
+import type { LoginPayload } from "./dto/login-dto.js";
+import type { RegisterPayload } from "./dto/register-dto.js";
+import { ApiResponse } from "../../common/utils/api-response.js";
 import { AuthService } from "./auth.service.js";
 import type { Request, Response } from "express";
 

@@ -1,8 +1,8 @@
 import express from "express";
 import type { Express } from "express";
 import cookieParser from "cookie-parser";
-import { errorMiddleware } from "./middleware/error.middleware.js";
-import { authRouter } from "./auth/auth.route.js";
+import { errorMiddleware } from "./common/middleware/error.middleware.js";
+import { authRouter } from "./modules/auth/auth.route.js";
 const app: Express = express();
 
 // Middleware

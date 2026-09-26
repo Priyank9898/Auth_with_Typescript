@@ -1,9 +1,9 @@
 import express from "express";
 import type { Router } from "express";
 import { AuthController } from "./auth.controller.js";
-import { validate } from "../middleware/validate.middleware.js";
-import { registerSchema } from "../dto/register-dto.js";
-import { loginSchema } from "../dto/login-dto.js";
+import { validate } from "../../common/middleware/validate.middleware.js";
+import { registerSchema } from "./dto/register-dto.js";
+import { loginSchema } from "./dto/login-dto.js";
 
 export const authRouter: Router = express.Router();
 

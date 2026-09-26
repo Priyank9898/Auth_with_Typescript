@@ -1,12 +1,12 @@
-import { db } from "../../db/db.index.js";
-import { userTable } from "../../db/db.schema.js";
-import type { RegisterPayload } from "../dto/register-dto.js";
+import { db } from "../../common/db/db.index.js";
+import { userTable } from "../../common/db/db.schema.js";
+import type { RegisterPayload } from "./dto/register-dto.js";
 import { eq } from "drizzle-orm";
-import { ApiError } from "../utils/api-error-response.js";
+import { ApiError } from "../../common/utils/api-error-response.js";
 import { createHmac, randomBytes } from "node:crypto";
-import { JwtUtils } from "../utils/jwt-utils.js";
+import { JwtUtils } from "../../common/utils/jwt-utils.js";
 import crypto from "crypto";
-import type { LoginPayload } from "../dto/login-dto.js";
+import type { LoginPayload } from "./dto/login-dto.js";
 
 const passGenerator = (password: string, existingSalt?: string) => {
   const salt = existingSalt ?? randomBytes(32).toString("hex");

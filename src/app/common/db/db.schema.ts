@@ -7,7 +7,7 @@ import {
   timestamp,
   pgEnum,
 } from "drizzle-orm/pg-core";
-import { ROLES } from "../app/constants/roles.js";
+import { ROLES } from "../constants/roles.js";
 
 export const roleEnum = pgEnum(
   "role",
